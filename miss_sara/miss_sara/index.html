@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeachTrack - Student Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-button active" data-tab="dashboard">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Dashboard</span>
+            </button>
+            <button class="tab-button" data-tab="students">
+                <span class="tab-icon">👥</span>
+                <span class="tab-label">Students</span>
+            </button>
+            <button class="tab-button" data-tab="calendar">
+                <span class="tab-icon">📅</span>
+                <span class="tab-label">Calendar</span>
+            </button>
+            <button class="tab-button" data-tab="settings">
+                <span class="tab-icon">⚙️</span>
+                <span class="tab-label">Settings</span>
+            </button>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane active" id="dashboard">
+                <div class="container">
+                    <h1>Dashboard</h1>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <h3>Total Students</h3>
+                            <div class="stat-value" id="total-students">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Upcoming Lessons</h3>
+                            <div class="stat-value" id="upcoming-lessons">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Pending Payments</h3>
+                            <div class="stat-value" id="pending-payments">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-actions">
+                        <button class="btn btn--primary" onclick="showAddStudentModal()">Add New Student</button>
+                        <button class="btn btn--secondary" onclick="showAddLessonModal()">Record Lesson</button>
+                    </div>
+
+                    <div class="recent-activities">
+                        <h2>Recent Activities</h2>
+                        <div id="recent-activities-list" class="activities-list">
+                            <!-- Activities will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Tab -->
+            <div class="tab-pane" id="students">
+                <div class="container">
+                    <div class="students-header">
+                        <h1>Students</h1>
+                        <button class="btn btn--primary btn--sm" onclick="showAddStudentModal()">+ Add Student</button>
+                    </div>
+                    
+                    <div class="search-filter-section">
+                        <input type="text" class="form-control search-input" placeholder="Search students..." id="student-search">
+                        <select class="form-control filter-select" id="payment-filter">
+                            <option value="">All Payment Status</option>
+                            <option value="paid">Paid</option>
+                            <option value="unpaid">Unpaid</option>
+                        </select>
+                    </div>
+
+                    <div id="students-list" class="students-grid">
+                        <!-- Students will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div class="tab-pane" id="calendar">
+                <div class="container">
+                    <h1>Calendar</h1>
+                    <div class="calendar-header">
+                        <button class="btn btn--outline btn--sm" id="prev-month">‹ Previous</button>
+                        <h2 id="current-month">June 2025</h2>
+                        <button class="btn btn--outline btn--sm" id="next-month">Next ›</button>
+                    </div>
+                    <div id="calendar-grid" class="calendar-grid">
+                        <!-- Calendar will be populated by JavaScript -->
+                    </div>
+                    <div id="selected-day-lessons" class="selected-day-lessons">
+                        <!-- Selected day lessons will be shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane" id="settings">
+                <div class="container">
+                    <h1>Settings</h1>
+                    <div class="settings-sections">
+                        <div class="card">
+                            <div class="card__header">
+                                <h3>Program Templates</h3>
+                            </div>
+                            <div class="card__body">
+                                <div id="program-templates">
+                                    <!-- Program templates will be populated by JavaScript -->
+                                </div>
+                                <button class="btn btn--secondary btn--full-width mt-16" onclick="showAddTemplateModal()">Add New Template</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card__header">
+                                <h3>Data Management</h3>
+                            </div>
+                            <div class="card__body">
+                                <button class="btn btn--outline btn--full-width mb-8" onclick="exportData()">Export Data</button>
+                                <button class="btn btn--outline btn--full-width" onclick="importData()">Import Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Student Detail Modal -->
+        <div id="student-detail-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="student-detail-name">Student Details</h2>
+                    <button class="modal-close" onclick="closeModal('student-detail-modal')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="student-detail-content">
+                        <!-- Student details will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Student Modal -->
+        <div id="add-student-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Student</h2>
+                    <button class="modal-close" onclick="closeModal('add-student-modal')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-student-form" class="student-form">
+                        <div class="form-group">
+                            <label class="form-label">Student Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact Information</label>
+                            <input type="text" class="form-control" name="contactInfo" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact</label>
+                            <input type="text" class="form-control" name="emergencyContact">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Program</label>
+                            <select class="form-control" name="programId" required>
+                                <option value="">Select a program...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" onclick="closeModal('add-student-modal')">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Add Student</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Lesson Modal -->
+        <div id="add-lesson-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Record Lesson</h2>
+                    <button class="modal-close" onclick="closeModal('add-lesson-modal')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-lesson-form">
+                        <div class="form-group">
+                            <label class="form-label">Student</label>
+                            <select class="form-control" name="studentId" required>
+                                <option value="">Select a student...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-control" name="time" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" name="status" required>
+                                <option value="completed">Completed</option>
+                                <option value="missed">Missed</option>
+                                <option value="rescheduled">Rescheduled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" onclick="closeModal('add-lesson-modal')">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Record Lesson</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Template Modal -->
+        <div id="add-template-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add Program Template</h2>
+                    <button class="modal-close" onclick="closeModal('add-template-modal')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-template-form">
+                        <div class="form-group">
+                            <label class="form-label">Program Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Total Lessons</label>
+                            <input type="number" class="form-control" name="totalLessons" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price ($)</label>
+                            <input type="number" class="form-control" name="price" required min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" onclick="closeModal('add-template-modal')">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Add Template</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Record Payment Modal -->
+        <div id="record-payment-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Record Payment</h2>
+                    <button class="modal-close" onclick="closeModal('record-payment-modal')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="record-payment-form">
+                        <div class="form-group">
+                            <label class="form-label">Amount ($)</label>
+                            <input type="number" class="form-control" name="amount" required min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-control" name="method" required>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Check">Check</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="2"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" onclick="closeModal('record-payment-modal')">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Record Payment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
