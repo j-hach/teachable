@@ -109,21 +109,51 @@ class TeachTrackApp {
                 name: "4-Lesson Mathematics Plan",
                 totalLessons: 4,
                 price: 800.00,
-                description: "Basic mathematics program covering arithmetic and pre-algebra"
+                description: "Basic mathematics program covering arithmetic and pre-algebra",
+                lessonDates: [
+                    "2025-06-10T15:00:00",
+                    "2025-06-17T15:00:00",
+                    "2025-06-24T15:00:00",
+                    "2025-07-01T15:00:00"
+                ]
             },
             {
                 id: "t2",
                 name: "8-Lesson Science Program",
                 totalLessons: 8,
                 price: 1200.00,
-                description: "Comprehensive science program covering physics and chemistry"
+                description: "Comprehensive science program covering physics and chemistry",
+                lessonDates: [
+                    "2025-06-11T16:00:00",
+                    "2025-06-18T16:00:00",
+                    "2025-06-25T16:00:00",
+                    "2025-07-02T16:00:00",
+                    "2025-07-09T16:00:00",
+                    "2025-07-16T16:00:00",
+                    "2025-07-23T16:00:00",
+                    "2025-07-30T16:00:00"
+                ]
             },
             {
                 id: "t3",
                 name: "12-Lesson Language Arts",
                 totalLessons: 12,
                 price: 1800.00,
-                description: "Advanced language arts program focusing on writing and literature"
+                description: "Advanced language arts program focusing on writing and literature",
+                lessonDates: [
+                    "2025-06-12T14:00:00",
+                    "2025-06-19T14:00:00",
+                    "2025-06-26T14:00:00",
+                    "2025-07-03T14:00:00",
+                    "2025-07-10T14:00:00",
+                    "2025-07-17T14:00:00",
+                    "2025-07-24T14:00:00",
+                    "2025-07-31T14:00:00",
+                    "2025-08-07T14:00:00",
+                    "2025-08-14T14:00:00",
+                    "2025-08-21T14:00:00",
+                    "2025-08-28T14:00:00"
+                ]
             }
         ];
 
@@ -236,6 +266,14 @@ class TeachTrackApp {
             });
         });
 
+        // Dashboard stat cards
+        const totalStudentsCard = document.getElementById('total-students');
+        if (totalStudentsCard && totalStudentsCard.parentElement) {
+            totalStudentsCard.parentElement.addEventListener('click', () => {
+                this.switchTab('students');
+            });
+        }
+
         // Search and filter
         const searchInput = document.getElementById('student-search');
         const paymentFilter = document.getElementById('payment-filter');
@@ -302,6 +340,14 @@ class TeachTrackApp {
             addTemplateForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.addTemplate(new FormData(e.target));
+            });
+        }
+
+        const editTemplateForm = document.getElementById('edit-template-form');
+        if (editTemplateForm) {
+            editTemplateForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.updateTemplate(new FormData(e.target));
             });
         }
 
@@ -466,7 +512,10 @@ class TeachTrackApp {
                     <div class="template-name">${template.name}</div>
                     <div class="template-details">${template.totalLessons} lessons • ${template.description}</div>
                 </div>
-                <div class="template-price">$${template.price.toFixed(2)}</div>
+                <div class="template-actions">
+                    <div class="template-price">$${template.price.toFixed(2)}</div>
+                    <button class="btn btn--secondary btn--sm" onclick="app.showEditTemplateModal('${template.id}')">Edit</button>
+                </div>
             </div>
         `).join('');
     }
@@ -686,7 +735,7 @@ class TeachTrackApp {
                 completedLessons: 0,
                 paymentStatus: false
             },
-            lessonDates: []
+            lessonDates: selectedTemplate.lessonDates ? [...selectedTemplate.lessonDates] : []
         };
         
         this.students.push(student);
@@ -728,12 +777,38 @@ class TeachTrackApp {
     }
 
     addTemplate(formData) {
+        const totalLessons = parseInt(formData.get('totalLessons'));
+        const lessonDates = [];
+
+        const startDate = formData.get('startDate');
+        const weekDay = formData.get('weekDay');
+        const time = formData.get('time');
+
+        if (startDate && weekDay && time) {
+            let currentDate = new Date(startDate);
+            const dayOfWeek = parseInt(weekDay);
+            
+            // Adjust to the first occurrence of the selected weekday
+            while (currentDate.getDay() !== dayOfWeek) {
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            for (let i = 0; i < totalLessons; i++) {
+                const lessonDate = new Date(currentDate);
+                const [hours, minutes] = time.split(':');
+                lessonDate.setHours(hours, minutes);
+                lessonDates.push(lessonDate.toISOString());
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+        }
+
         const template = {
             id: Date.now().toString(),
             name: formData.get('name'),
-            totalLessons: parseInt(formData.get('totalLessons')),
+            totalLessons: totalLessons,
             price: parseFloat(formData.get('price')),
-            description: formData.get('description')
+            description: formData.get('description'),
+            lessonDates: lessonDates
         };
         
         this.programTemplates.push(template);
@@ -783,6 +858,22 @@ class TeachTrackApp {
         }
     }
 
+    updateTemplate(formData) {
+        const templateId = formData.get('id');
+        const template = this.programTemplates.find(t => t.id === templateId);
+        if (template) {
+            template.name = formData.get('name');
+            template.totalLessons = parseInt(formData.get('totalLessons'));
+            template.price = parseFloat(formData.get('price'));
+            template.description = formData.get('description');
+        }
+
+        this.renderSettings();
+        this.populateTemplateSelects();
+        this.closeModal('edit-template-modal');
+        alert(`Template ${template.name} updated successfully!`);
+    }
+
     // Modal management
     showModal(modalId) {
         const modal = document.getElementById(modalId);
@@ -800,6 +891,10 @@ class TeachTrackApp {
             const today = new Date().toISOString().split('T')[0];
             const dateInput = document.querySelector('#add-lesson-form input[name="date"]');
             if (dateInput) dateInput.value = today;
+        } else if (modalId === 'add-template-modal') {
+            this.populateTemplateSelects();
+        } else if (modalId === 'edit-template-modal') {
+            this.populateTemplateSelects();
         }
         
         // Focus first input
@@ -836,6 +931,20 @@ class TeachTrackApp {
 
     showAddTemplateModal() {
         this.showModal('add-template-modal');
+    }
+
+    showEditTemplateModal(templateId) {
+        const template = this.programTemplates.find(t => t.id === templateId);
+        if (!template) return;
+
+        const form = document.getElementById('edit-template-form');
+        form.querySelector('[name="id"]').value = template.id;
+        form.querySelector('[name="name"]').value = template.name;
+        form.querySelector('[name="totalLessons"]').value = template.totalLessons;
+        form.querySelector('[name="price"]').value = template.price;
+        form.querySelector('[name="description"]').value = template.description;
+
+        this.showModal('edit-template-modal');
     }
 
     showRecordPaymentModal(studentId) {
@@ -1041,6 +1150,10 @@ function showAddLessonModal() {
 
 function showAddTemplateModal() {
     app.showAddTemplateModal();
+}
+
+function showEditTemplateModal(templateId) {
+    app.showEditTemplateModal(templateId);
 }
 
 function exportData() {
