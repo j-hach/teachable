@@ -866,6 +866,16 @@ class TeachTrackApp {
             template.totalLessons = parseInt(formData.get('totalLessons'));
             template.price = parseFloat(formData.get('price'));
             template.description = formData.get('description');
+            // Collect lesson dates
+            const lessonDates = [];
+            document.querySelectorAll('#edit-lesson-dates-list .lesson-date-input').forEach(input => {
+                if (input.value) {
+                    // Convert local datetime to ISO string
+                    const dt = new Date(input.value);
+                    lessonDates.push(dt.toISOString());
+                }
+            });
+            template.lessonDates = lessonDates;
         }
 
         this.renderSettings();
@@ -943,6 +953,51 @@ class TeachTrackApp {
         form.querySelector('[name="totalLessons"]').value = template.totalLessons;
         form.querySelector('[name="price"]').value = template.price;
         form.querySelector('[name="description"]').value = template.description;
+
+        // Render lesson dates
+        const lessonDatesList = document.getElementById('edit-lesson-dates-list');
+        lessonDatesList.innerHTML = '';
+        (template.lessonDates || []).forEach((date, idx) => {
+            const dateValue = date ? new Date(date).toISOString().slice(0, 16) : '';
+            lessonDatesList.innerHTML += `
+                <div class="lesson-date-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <input type="datetime-local" class="form-control lesson-date-input" value="${dateValue}" data-idx="${idx}" style="flex:1;" />
+                    <button type="button" class="btn btn--outline btn--sm remove-lesson-date-btn" data-idx="${idx}">Remove</button>
+                </div>
+            `;
+        });
+
+        // Add event listeners for remove buttons
+        setTimeout(() => {
+            lessonDatesList.querySelectorAll('.remove-lesson-date-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    btn.parentElement.remove();
+                };
+            });
+        }, 0);
+
+        // Add event listener for add button
+        const addBtn = document.getElementById('add-lesson-date-btn');
+        addBtn.onclick = (e) => {
+            e.preventDefault();
+            const idx = lessonDatesList.querySelectorAll('.lesson-date-row').length;
+            const row = document.createElement('div');
+            row.className = 'lesson-date-row';
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+            row.style.marginBottom = '8px';
+            row.innerHTML = `
+                <input type="datetime-local" class="form-control lesson-date-input" data-idx="${idx}" style="flex:1;" />
+                <button type="button" class="btn btn--outline btn--sm remove-lesson-date-btn" data-idx="${idx}">Remove</button>
+            `;
+            lessonDatesList.appendChild(row);
+            row.querySelector('.remove-lesson-date-btn').onclick = (ev) => {
+                ev.preventDefault();
+                row.remove();
+            };
+        };
 
         this.showModal('edit-template-modal');
     }
